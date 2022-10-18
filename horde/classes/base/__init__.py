@@ -1366,6 +1366,8 @@ class Database:
         for worker in self.workers.values():
             if worker.is_stale():
                 continue
+            model_name = None
+            if not worker.models: continue
             for model_name in worker.models:
                 if not model_name: continue
                 mode_dict_template = {
