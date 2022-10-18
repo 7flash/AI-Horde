@@ -65,6 +65,8 @@ class AsyncGenerate(AsyncGenerate):
             raise e.InvalidSize(self.username)
         if self.params.get("steps",50) > 100:
             raise e.TooManySteps(self.username, self.args['params']['steps'])
+        if len(self.args['prompt'].split()) > 80:
+            raise e.InvalidPromptSize(self.username)
 
     def get_size_too_big_message(self):
         return("Warning: No available workers can fulfill this request. It will expire in 10 minutes. Consider reducing the size to 512x512")
@@ -104,6 +106,8 @@ class SyncGenerate(SyncGenerate):
             raise e.InvalidSize(self.username)
         if self.params.get("steps",50) > 100:
             raise e.TooManySteps(self.username, self.params['steps'])
+        if len(self.args['prompt'].split()) > 80:
+            raise e.InvalidPromptSize(self.username)
 
     
     # We split this into its own function, so that it may be overriden

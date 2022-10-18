@@ -784,12 +784,17 @@ class User:
         return("OK")
 
     def set_trusted(self,is_trusted):
+        # Anonymous can never be trusted
+        if self.is_anon():
+            return
         self.trusted = is_trusted
         if self.trusted:
             for worker in self.get_workers():
                 worker.paused = False
 
     def set_moderator(self,is_moderator):
+        if self.is_anon():
+            return
         self.moderator = is_moderator
         if self.moderator:
             logger.warning(f"{self.username} Set as moderator")
@@ -808,7 +813,7 @@ class User:
         self.last_active = datetime.now()
         self.contributions["fulfillments"] += 1
         # While a worker is untrusted, half of all generated kudos go for evaluation
-        if not self.trusted:
+        if not self.trusted and not self.is_anon():
             kudos_eval = round(kudos / 2)
             kudos -= kudos_eval
             self.evaluating_kudos += kudos_eval
@@ -821,7 +826,7 @@ class User:
     def record_uptime(self, kudos):
         self.last_active = datetime.now()
         # While a worker is untrusted, all uptime kudos go for evaluation
-        if not self.trusted:
+        if not self.trusted and not self.is_anon():
             self.evaluating_kudos += kudos
             self.check_for_trust()
         else:
@@ -832,7 +837,7 @@ class User:
         All the evaluating Kudos added to their total and they automatically become trusted
         Suspicious users do not automatically pass evaluation
         '''
-        if self.evaluating_kudos >= int(os.getenv("KUDOS_TRUST_THRESHOLD")) and not self.is_suspicious():
+        if self.evaluating_kudos >= int(os.getenv("KUDOS_TRUST_THRESHOLD")) and not self.is_suspicious() and not self.is_anon():
             self.modify_kudos(self.evaluating_kudos,"accumulated")
             self.evaluating_kudos = 0
             self.set_trusted(True)

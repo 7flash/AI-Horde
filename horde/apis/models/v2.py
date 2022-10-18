@@ -164,7 +164,7 @@ class Models:
             "new_kudos": fields.Float(description="The new total Kudos this user has after this request"),
             "concurrency": fields.Integer(example=30,description="The request concurrency this user has after this request"),
             "usage_multiplier": fields.Float(example=1.0,description="Multiplies the amount of kudos lost when generating images."),
-            "worker_invited": fields.Integer(example=1,description="This userWhether this user has been invited to join a worker to the horde and how many of them. When 0, this user cannot add (new) workers to the horde."),
+            "worker_invited": fields.Integer(example=1,description="Whether this user has been invited to join a worker to the horde and how many of them. When 0, this user cannot add (new) workers to the horde."),
             "moderator": fields.Boolean(example=False,description="The user's new moderator status."),
             "public_workers": fields.Boolean(example=False,description="The user's new public_workers status."),
             "username": fields.String(example='username#1',description="The user's new username."),
@@ -192,12 +192,12 @@ class Models:
         self.response_model_error = api.model('RequestError', {
             'message': fields.String(description="The error message for this status code."),
         })
-        self.response_model_model = api.model('Model', {
+        self.response_model_active_model = api.model('ActiveModel', {
             'name': fields.String(description="The Name of a model available by workers in this horde."),
             'count': fields.Integer(description="How many of workers in this horde are running this model."),
             'performance': fields.Float(description="The average speed of generation for this model"),
         })
-        self.response_model_deleted_worker = api.model('Model', {
+        self.response_model_deleted_worker = api.model('DeletedWorker', {
             'deleted_id': fields.String(description="The ID of the deleted worker"),
             'deleted_name': fields.String(description="The Name of the deleted worker"),
         })

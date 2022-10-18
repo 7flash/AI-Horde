@@ -24,6 +24,7 @@ parsers = ParsersV2()
 handle_missing_prompts = api.errorhandler(e.MissingPrompt)(e.handle_bad_requests)
 handle_kudos_validation_error = api.errorhandler(e.KudosValidationError)(e.handle_bad_requests)
 handle_invalid_size = api.errorhandler(e.InvalidSize)(e.handle_bad_requests)
+handle_invalid_prompt_size = api.errorhandler(e.InvalidPromptSize)(e.handle_bad_requests)
 handle_too_many_steps = api.errorhandler(e.TooManySteps)(e.handle_bad_requests)
 handle_profanity = api.errorhandler(e.Profanity)(e.handle_bad_requests)
 handle_too_long = api.errorhandler(e.TooLong)(e.handle_bad_requests)
@@ -698,7 +699,7 @@ class FindUser(Resource):
 class Models(Resource):
     decorators = [limiter.limit("30/minute")]
     @logger.catch(reraise=True)
-    @api.marshal_with(models.response_model_model, code=200, description='List All Active Models', as_list=True)
+    @api.marshal_with(models.response_model_active_model, code=200, description='List All Active Models', as_list=True)
     def get(self):
         '''Returns a list of models active currently in this horde
         '''
