@@ -257,7 +257,7 @@ class ProcessingGeneration:
         self.generation = generation
         # Support for two typical properties 
         self.seed = kwargs.get('seed', None)
-        things_per_sec = self.owner.db.stats.record_fulfilment(self.owner.things, self.start_time)
+        things_per_sec = self.owner.db.stats.record_fulfilment(things=self.owner.things, starting_time=self.start_time, model=self.model)
         self.kudos = self.owner.db.convert_things_to_kudos(self.owner.things, seed = self.seed, model_name = self.model)
         if self.fake and self.worker.user != self.owner.user:
             # We do not record usage for paused workers, unless the requestor was the same owner as the worker
@@ -463,10 +463,11 @@ class Worker:
         if len(waiting_prompt.models) > 0 and not any(model in waiting_prompt.models for model in self.models):
             is_matching = False
             skipped_reason = 'models'
-        # If the worker is slower than average, and we're on the last quarter of the request, we try to utilize only fast workers
-        if self.get_performance_average() < self.db.stats.get_request_avg() and waiting_prompt.n <= waiting_prompt.jobs/4:
-            is_matching = False
-            skipped_reason = 'performance'
+        # # I removed this for now as I think it might be blocking requests from generating. I will revisit later again
+        # # If the worker is slower than average, and we're on the last quarter of the request, we try to utilize only fast workers
+        # if self.get_performance_average() < self.db.stats.get_request_avg() and waiting_prompt.n <= waiting_prompt.jobs/4:
+        #     is_matching = False
+        #     skipped_reason = 'performance'
         return([is_matching,skipped_reason])
 
     # We split it to its own function to make it extendable
@@ -1058,6 +1059,7 @@ class User:
 
 class Stats:
     worker_performances = []
+    model_performances = {}
     fulfillments = []
 
     def __init__(self, db, convert_flag = None, interval = 60):
@@ -1065,7 +1067,7 @@ class Stats:
         self.interval = interval
         self.last_pruning = datetime.now()
 
-    def record_fulfilment(self, things, starting_time):
+    def record_fulfilment(self, things, starting_time, model):
         seconds_taken = (datetime.now() - starting_time).seconds
         if seconds_taken == 0:
             things_per_sec = 1
@@ -1074,12 +1076,18 @@ class Stats:
         if len(self.worker_performances) >= 10:
             del self.worker_performances[0]
         self.worker_performances.append(things_per_sec)
+        if model not in self.model_performances:
+            self.model_performances[model] = []
+        self.model_performances[model].append(things_per_sec)
+        if len(self.model_performances[model]) >= 10:
+            del self.model_performances[model][0]
         fulfillment_dict = {
             raw_thing_name: things,
             "start_time": starting_time,
             "deliver_time": datetime.now(),
         }
         self.fulfillments.append(fulfillment_dict)
+        if self.fulfillment
         return(things_per_sec)
 
     def get_things_per_min(self):
@@ -1102,6 +1110,12 @@ class Stats:
         avg = sum(self.worker_performances) / len(self.worker_performances)
         return(round(avg,1))
 
+    def get_model_avg(self, model):
+        if len(self.model_performances.get(model,[])) == 0:
+            return(0)
+        avg = sum(self.model_performances[model]) / len(self.model_performances[model])
+        return(round(avg,1))
+
     @logger.catch(reraise=True)
     def serialize(self):
         serialized_fulfillments = []
@@ -1114,6 +1128,7 @@ class Stats:
             serialized_fulfillments.append(json_fulfillment)
         ret_dict = {
             "worker_performances": self.worker_performances,
+            "model_performances": self.model_performances,
             "fulfillments": serialized_fulfillments,
         }
         return(ret_dict)
@@ -1125,6 +1140,7 @@ class Stats:
             self.worker_performances = saved_dict["server_performances"]
         else:
             self.worker_performances = saved_dict["worker_performances"]
+        self.model_performances = saved_dict.get("model_performances", {})
         deserialized_fulfillments = []
         for fulfillment in saved_dict.get("fulfillments", []):
             class_fulfillment = {
@@ -1352,9 +1368,11 @@ class Database:
             if worker.is_stale():
                 continue
             for model_name in worker.models:
+                if not model_name: continue
                 mode_dict_template = {
                     "name": model_name,
                     "count": 0,
+                    "performance": self.stats.get_model_avg(model_name),
                 }
                 models_dict[model_name] = models_dict.get(model_name, mode_dict_template)
                 models_dict[model_name]["count"] += 1
