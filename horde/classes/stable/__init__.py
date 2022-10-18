@@ -55,7 +55,7 @@ class WaitingPrompt(WaitingPrompt):
             # logger.error(self.seed)
             self.gen_payload["seed"] = self.seed_to_int(self.seed)
             self.generations_done += 1
-        if procgen.worker.bridge_version == 2:
+        if procgen.worker.bridge_version >= 2:
             self.gen_payload["use_gfpgan"] = self.use_gfpgan
             self.gen_payload["use_real_esrgan"] = self.use_real_esrgan
             self.gen_payload["use_ldsr"] = self.use_ldsr
@@ -72,6 +72,8 @@ class WaitingPrompt(WaitingPrompt):
                     self.gen_payload["toggles"] = [1, 4, 8]
                 elif 8 not in self.gen_payload["toggles"]:
                     self.gen_payload["toggles"].append(8)
+            if "denoising_strength" in self.gen_payload:
+                del self.gen_payload["denoising_strength"]
         return(self.gen_payload)
 
     def get_pop_payload(self, procgen):
