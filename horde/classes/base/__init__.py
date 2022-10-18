@@ -1087,7 +1087,6 @@ class Stats:
             "deliver_time": datetime.now(),
         }
         self.fulfillments.append(fulfillment_dict)
-        if self.fulfillment
         return(things_per_sec)
 
     def get_things_per_min(self):
