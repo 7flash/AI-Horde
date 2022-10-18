@@ -1056,6 +1056,18 @@ class User:
             self.kudos = recalc_kudos + self.kudos_details.get('admin',0) + self.kudos_details.get('received',0) - self.kudos_details.get('gifted',0)
             self.kudos_details['accumulated'] = recalc_kudos
         self.ensure_kudos_positive()
+        duplicate_user = self.db.find_user_by_id(self.id)
+        if duplicate_user:
+            if duplicate_user.get_unique_alias() != self.get_unique_alias():
+                logger.error(f"mismatching duplicate IDs found! {self.get_unique_alias()} != {duplicate_user.get_unique_alias()}. Please cleanup manually!")
+            else:
+                logger.warning(f"found duplicate ID: {self.get_unique_alias()}")
+                duplicate_user.kudos += self.kudos
+                if duplicate_user.last_active < self.last_active:
+                    logger.warning(f"Merging {self.oauth_id} into {duplicate_user.oauth_id}")
+                    duplicate_user.oauth_id = self.oauth_id
+                return(True)
+
 
 
 class Stats:
@@ -1163,6 +1175,8 @@ class Database:
         self.stats = self.new_stats()
         self.USERS_FILE = "db/users.json"
         self.users = {}
+        # I'm setting this quickly here so that we do not crash when trying to detect duplicate IDs, during user deserialization
+        self.anon = None
         # Increments any time a new user is added
         # Is appended to usernames, to ensure usernames never conflict
         self.last_user_id = 0
@@ -1177,7 +1191,9 @@ class Database:
                         logger.error("Found null user on db load. Bypassing")
                         continue
                     new_user = self.new_user()
-                    new_user.deserialize(user_dict,convert_flag)
+                    error = new_user.deserialize(user_dict,convert_flag)
+                    if error:
+                        continue
                     if new_user.is_stale():
                         logger.warning(f"(Dry-Run) Deleting stale user {new_user.get_unique_alias()}")
                     self.users[new_user.oauth_id] = new_user
@@ -1339,7 +1355,7 @@ class Database:
     def find_user_by_id(self, user_id):
         for user in self.users.values():
             # The arguments passed to the URL are always strings
-            if str(user.id) == user_id:
+            if str(user.id) == str(user_id):
                 if user == self.anon and not self.ALLOW_ANONYMOUS:
                     return(None)
                 return(user)
