@@ -34,6 +34,7 @@ class Models:
         self.response_model_generation_result = api.model('Generation', {
             'worker_id': fields.String(title="Worker ID", description="The UUID of the worker which generated this image"),
             'worker_name': fields.String(title="Worker Name", description="The name of the worker which generated this image"),
+            'model': fields.String(title="Generation Model", description="The model which generated this image"),
         })
         self.response_model_wp_status_lite = api.model('RequestStatusCheck', {
             'finished': fields.Integer(description="The amount of finished images in this request"),

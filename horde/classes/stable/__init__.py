@@ -22,7 +22,7 @@ class WaitingPrompt(WaitingPrompt):
         # The total amount of to pixelsteps requested.
         self.total_usage = round(self.things * self.n / thing_divisor,2)
         self.source_image = kwargs.get("source_image", None)
-        self.models = kwargs.get("models", ['ReadOnly'])
+        self.models = kwargs.get("models", ['stable_diffusion'])
         self.censor_nsfw = kwargs.get("censor_nsfw", True)
         self.seed = None
         if 'seed' in params and params['seed'] != None:
