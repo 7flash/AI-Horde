@@ -183,7 +183,7 @@ class Worker(Worker):
     @logger.catch(reraise=True)
     def deserialize(self, saved_dict, convert_flag = None):
         super().deserialize(saved_dict, convert_flag)
-        if len(self.models) == 0 or None in self.models:
+        if not self.models or len(self.models) == 0 or None in self.models:
             self.models = ['stable_diffusion']
         self.max_pixels = saved_dict["max_pixels"]
         if convert_flag == 'pixelsteps':
