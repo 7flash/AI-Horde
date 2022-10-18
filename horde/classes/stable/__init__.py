@@ -140,6 +140,8 @@ class Worker(Worker):
     def check_in(self, max_pixels, **kwargs):
         super().check_in(**kwargs)
         self.max_pixels = max_pixels
+        if len(self.models) == 0:
+            self.models == ['stable_diffusion']
         paused_string = ''
         if self.paused:
             paused_string = '(Paused) '
@@ -181,6 +183,8 @@ class Worker(Worker):
     @logger.catch(reraise=True)
     def deserialize(self, saved_dict, convert_flag = None):
         super().deserialize(saved_dict, convert_flag)
+        if len(self.models) == 0 or None in self.models:
+            self.models = ['stable_diffusion']
         self.max_pixels = saved_dict["max_pixels"]
         if convert_flag == 'pixelsteps':
             self.contributions = round(self.contributions / 50,2)
