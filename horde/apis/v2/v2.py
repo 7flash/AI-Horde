@@ -402,7 +402,7 @@ class TransferKudos(Resource):
         return({"transfered": kudos}, 200)
 
 class Workers(Resource):
-    @logger.catch
+    @logger.catch(reraise=True)
     @api.marshal_with(models.response_model_worker_details, code=200, description='Workers List', as_list=True, skip_none=True)
     def get(self):
         '''A List with the details of all registered and active workers
@@ -694,9 +694,20 @@ class FindUser(Resource):
             raise e.UserNotFound(self.args.apikey, 'api_key')
         return(user.get_details(1),200)
 
+
+class Models(Resource):
+    decorators = [limiter.limit("30/minute")]
+    @logger.catch(reraise=True)
+    @api.marshal_with(models.response_model_model, code=200, description='List All Active Models', as_list=True)
+    def get(self):
+        '''Returns a list of models active currently in this horde
+        '''
+        return(db.get_available_models(),200)
+
+
 class HordeLoad(Resource):
     decorators = [limiter.limit("20/minute")]
-    @logger.catch
+    @logger.catch(reraise=True)
     @api.marshal_with(models.response_model_horde_performance, code=200, description='Horde Performance')
     def get(self):
         '''Details about the current performance of this Horde
@@ -706,7 +717,7 @@ class HordeLoad(Resource):
         return(load_dict,200)
 
 class HordeNews(Resource):
-    @logger.catch
+    @logger.catch(reraise=True)
     @api.marshal_with(models.response_model_newspiece, code=200, description='Horde News', as_list = True)
     def get(self):
         '''Read the latest happenings on the horde

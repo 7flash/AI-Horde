@@ -473,7 +473,7 @@ class Worker:
     def convert_contribution(self,raw_things):
         self.contributions = round(self.contributions + raw_things/thing_divisor,2)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def record_contribution(self, raw_things, kudos, things_per_sec):
         '''We record the servers newest contribution
         We do not need to know what type the contribution is, to avoid unnecessarily extending this method
@@ -522,7 +522,7 @@ class Worker:
 
 
     # Should be extended by each specific horde
-    @logger.catch
+    @logger.catch(reraise=True)
     def get_details(self, details_privilege = 0):
         '''We display these in the workers list json'''
         ret_dict = {
@@ -547,7 +547,7 @@ class Worker:
         return(ret_dict)
 
     # Should be extended by each specific horde
-    @logger.catch
+    @logger.catch(reraise=True)
     def serialize(self):
         ret_dict = {
             "oauth_id": self.user.oauth_id,
@@ -571,7 +571,7 @@ class Worker:
         }
         return(ret_dict)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def deserialize(self, saved_dict, convert_flag = None):
         self.user = self.db.find_user_by_oauth_id(saved_dict["oauth_id"])
         self.name = saved_dict["name"]
@@ -892,7 +892,7 @@ class User:
         except ValueError:
             return(False)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def get_details(self, details_privilege = 0):
         ret_dict = {
             "username": self.get_unique_alias(),
@@ -981,7 +981,7 @@ class User:
             return(False)
         return(True)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def serialize(self):
         serialized_monthly_kudos = {
             "amount": self.monthly_kudos["amount"],
@@ -1014,7 +1014,7 @@ class User:
         }
         return(ret_dict)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def deserialize(self, saved_dict, convert_flag = None):
         self.username = saved_dict["username"]
         self.oauth_id = saved_dict["oauth_id"]
@@ -1102,7 +1102,7 @@ class Stats:
         avg = sum(self.worker_performances) / len(self.worker_performances)
         return(round(avg,1))
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def serialize(self):
         serialized_fulfillments = []
         for fulfillment in self.fulfillments.copy():
@@ -1118,7 +1118,7 @@ class Stats:
         }
         return(ret_dict)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def deserialize(self, saved_dict, convert_flag = None):
         # Convert old key
         if "server_performances" in saved_dict:
@@ -1214,7 +1214,7 @@ class Database:
             self.write_files_to_disk()
             time.sleep(self.interval)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def write_files_to_disk(self):
         if not os.path.exists('db'):
             os.mkdir('db')

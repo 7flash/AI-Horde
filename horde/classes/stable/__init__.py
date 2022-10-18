@@ -2,7 +2,7 @@ from ..base import *
 
 class WaitingPrompt(WaitingPrompt):
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def extract_params(self, params, **kwargs):
         self.n = params.pop('n', 1)
         self.jobs = self.n 
@@ -35,7 +35,7 @@ class WaitingPrompt(WaitingPrompt):
 
         self.prepare_job_payload(params)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def prepare_job_payload(self, initial_dict = {}):
         # This is what we send to KoboldAI to the /generate/ API
         self.gen_payload = initial_dict
@@ -45,7 +45,7 @@ class WaitingPrompt(WaitingPrompt):
         self.gen_payload["ddim_steps"] = self.steps
         self.gen_payload["seed"] = self.seed
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def get_job_payload(self,procgen):
         if self.seed_variation and self.generations_done > 0:
             self.gen_payload["seed"] += self.seed_variation
@@ -170,13 +170,13 @@ class Worker(Worker):
         ret_dict["megapixelsteps_generated"] = self.contributions
         return(ret_dict)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def serialize(self):
         ret_dict = super().serialize()
         ret_dict["max_pixels"] = self.max_pixels
         return(ret_dict)
 
-    @logger.catch
+    @logger.catch(reraise=True)
     def deserialize(self, saved_dict, convert_flag = None):
         super().deserialize(saved_dict, convert_flag)
         self.max_pixels = saved_dict["max_pixels"]

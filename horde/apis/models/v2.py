@@ -194,6 +194,7 @@ class Models:
         self.response_model_model = api.model('Model', {
             'name': fields.String(description="The Name of a model available by workers in this horde."),
             'count': fields.Integer(description="How many of workers in this horde are running this model."),
+            'performance': fields.Float(description="The average speed of generation for this model"),
         })
         self.response_model_deleted_worker = api.model('Model', {
             'deleted_id': fields.String(description="The ID of the deleted worker"),
