@@ -141,7 +141,7 @@ class Worker(Worker):
         super().check_in(**kwargs)
         self.max_pixels = max_pixels
         if len(self.models) == 0:
-            self.models == ['stable_diffusion']
+            self.models = ['stable_diffusion']
         paused_string = ''
         if self.paused:
             paused_string = '(Paused) '
